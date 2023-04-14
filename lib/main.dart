@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_todo/item_card.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -41,7 +42,7 @@ class DodoPage extends StatefulWidget {
 }
 
 class _DodoPage extends State<DodoPage> {
-  List<String> _text = [];
+  final _currentSelectedItem = {};
   final textController = TextEditingController();
 
   @override
@@ -50,34 +51,39 @@ class _DodoPage extends State<DodoPage> {
         FirebaseFirestore.instance.collection('tasks_collection');
     Stream<QuerySnapshot> _tasks_snap = _tasks.snapshots();
 
-    void addItem(value) {
-      if (value != "") {
-        //   setState(() {
-        //     _text = [..._text, value];
-        //   }),
+    void addItem() {
+      if (_currentSelectedItem.isEmpty == false) {
         _tasks
-            .add({'task': value})
-            .then((value) => {print('adding value'), textController.clear()})
-            .catchError((err) => print(err));
+            .doc(_currentSelectedItem['document'])
+            .set({'task': textController.text}).then((value) {
+          print('updating value');
+          textController.clear();
+          setState(() {
+            _currentSelectedItem.clear();
+          });
+        }).catchError((err) => print(err));
+      } else if (textController.text != "") {
+        _tasks.add({'task': textController.text}).then((value) {
+          print('adding value');
+          textController.clear();
+        }).catchError((err) => print(err));
       }
     }
 
+    void updateItem(entry) {
+      textController.value = TextEditingValue(text: entry['task'] as String);
+      setState(() {
+        _currentSelectedItem.addAll({...entry});
+      });
+    }
+
     void deleteItem(document) {
-      // _text.removeAt(index),
-      // setState(
-      //   () {},
-      // )
-
-      print("document $document");
-
       _tasks
           .doc(document)
           .delete()
           .then((value) => print('deleted item'))
           .catchError((err) => print(err));
     }
-
-    ;
 
     return StreamBuilder<QuerySnapshot>(
       stream: _tasks_snap,
@@ -96,45 +102,27 @@ class _DodoPage extends State<DodoPage> {
           return {...data, 'document': document.id};
         }).toList();
 
-        // print(snapshot.data!.docs.toList());
-
-        return (Container(
-            // color: const Color.fromARGB(198, 39, 216, 216),
-            padding: const EdgeInsets.all(10),
-            child: ListView(
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "enter the task",
-                  ),
-                  onSubmitted: addItem,
-                  textInputAction: TextInputAction.go,
-                  controller: textController,
-                ),
-                ...list.map((entry) {
-                  final key = UniqueKey();
-                  return Card(
-                    key: key,
-                    child: Container(
-                      color: const Color.fromARGB(255, 210, 243, 243),
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(entry['task']),
-                            IconButton(
-                                onPressed: () => deleteItem(entry['document']),
-                                icon: const Icon(
-                                  Icons.delete,
-                                  size: 20.0,
-                                ))
-                          ]),
-                    ),
-                  );
-                }),
-              ],
-            )));
+        return (ListView(
+          padding: const EdgeInsets.all(10),
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "enter the task",
+              ),
+              onSubmitted: (_) => addItem(),
+              textInputAction: TextInputAction.go,
+              controller: textController,
+            ),
+            ...list.map((entry) {
+              return ItemCard(
+                entry: entry,
+                deleteItem: deleteItem,
+                updateItem: updateItem,
+              );
+            }),
+          ],
+        ));
       },
     );
   }
