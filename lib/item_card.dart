@@ -6,11 +6,13 @@ class ItemCard extends StatelessWidget {
     this.entry,
     this.deleteItem,
     this.updateItem,
+    this.markDone,
   });
 
   final Map<String, dynamic>? entry;
   final Function? deleteItem;
   final Function? updateItem;
+  final Function? markDone;
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +22,25 @@ class ItemCard extends StatelessWidget {
     return Card(
       key: key,
       child: Container(
-        color: const Color.fromARGB(255, 210, 243, 243),
+        color: (entry!.containsKey('done') && entry!.containsValue(true))
+            ? const Color.fromARGB(255, 221, 243, 210)
+            : const Color.fromARGB(255, 210, 243, 243),
         padding: const EdgeInsets.all(12.0),
         child:
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Flexible(child: Text(entry?['task'] ?? "")),
+          Flexible(
+              child: InkWell(
+            onTap: () => markDone!(entry, !entry!['done']),
+            child: Text(
+              entry?['task'] ?? "",
+              style: TextStyle(
+                  fontSize: 18.0,
+                  decoration:
+                      (entry!.containsKey('done') && entry!.containsValue(true))
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none),
+            ),
+          )),
           Row(
             children: [
               IconButton(

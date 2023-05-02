@@ -21,8 +21,8 @@ class DodoApp extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(
           title: const Text(
-            "Dodo App",
-            style: TextStyle(color: Color.fromARGB(255, 249, 255, 255)),
+            "🔫 Dodo App",
+            style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
           ),
           backgroundColor: const Color.fromARGB(235, 108, 238, 238),
         ),
@@ -53,9 +53,10 @@ class _DodoPage extends State<DodoPage> {
 
     void addItem() {
       if (_currentSelectedItem.isEmpty == false) {
-        _tasks
-            .doc(_currentSelectedItem['document'])
-            .set({'task': textController.text}).then((value) {
+        _tasks.doc(_currentSelectedItem['document']).set({
+          'task': textController.text,
+          'done': _currentSelectedItem['done'],
+        }).then((value) {
           print('updating value');
           textController.clear();
           setState(() {
@@ -63,7 +64,10 @@ class _DodoPage extends State<DodoPage> {
           });
         }).catchError((err) => print(err));
       } else if (textController.text != "") {
-        _tasks.add({'task': textController.text}).then((value) {
+        _tasks.add({
+          'task': textController.text,
+          'done': false,
+        }).then((value) {
           print('adding value');
           textController.clear();
         }).catchError((err) => print(err));
@@ -73,7 +77,7 @@ class _DodoPage extends State<DodoPage> {
     void updateItem(entry) {
       textController.value = TextEditingValue(text: entry['task'] as String);
       setState(() {
-        _currentSelectedItem.addAll({...entry});
+        _currentSelectedItem.addAll(entry);
       });
     }
 
@@ -83,6 +87,13 @@ class _DodoPage extends State<DodoPage> {
           .delete()
           .then((value) => print('deleted item'))
           .catchError((err) => print(err));
+    }
+
+    void markDone(entry, done) {
+      _tasks.doc(entry['document']).set({
+        'task': entry['task'],
+        'done': done,
+      });
     }
 
     return StreamBuilder<QuerySnapshot>(
@@ -119,6 +130,7 @@ class _DodoPage extends State<DodoPage> {
                 entry: entry,
                 deleteItem: deleteItem,
                 updateItem: updateItem,
+                markDone: markDone,
               );
             }),
           ],
