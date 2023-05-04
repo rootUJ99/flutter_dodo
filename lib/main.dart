@@ -112,29 +112,76 @@ class _DodoPage extends State<DodoPage> {
           Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
           return {...data, 'document': document.id};
         }).toList();
-
-        return (ListView(
-          padding: const EdgeInsets.all(10),
-          children: [
-            TextField(
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "enter the task",
-              ),
-              onSubmitted: (_) => addItem(),
-              textInputAction: TextInputAction.go,
-              controller: textController,
-            ),
-            ...list.map((entry) {
-              return ItemCard(
-                entry: entry,
-                deleteItem: deleteItem,
-                updateItem: updateItem,
-                markDone: markDone,
+        return ListView.builder(
+          itemCount: list.length + 1,
+          itemBuilder: (context, index) {
+            // print(index);
+            int calcIndex(int ind) => ind == 0 ? 0 : ind - 1;
+            final item = list[calcIndex(index)];
+            if (index == 0) {
+              return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 7),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "enter the task",
+                  ),
+                  onSubmitted: (_) => addItem(),
+                  textInputAction: TextInputAction.go,
+                  controller: textController,
+                ),
               );
-            }),
-          ],
-        ));
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 7),
+              child: Dismissible(
+                key: UniqueKey(),
+                // confirmDismiss: ,
+                background: const ColoredBox(
+                  color: Color.fromARGB(220, 121, 158, 201),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(Icons.edit),
+                    ),
+                  ),
+                ),
+                secondaryBackground: const ColoredBox(
+                  color: Color.fromARGB(255, 236, 103, 103),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(Icons.delete),
+                    ),
+                  ),
+                ),
+                onDismissed: (direction) {
+                  switch (direction) {
+                    case DismissDirection.endToStart:
+                      print('delete item');
+                      deleteItem(item['document']);
+                      break;
+                    case DismissDirection.startToEnd:
+                      print('edit item');
+                      updateItem(item);
+                      break;
+                    default:
+                      print('nothing just chill');
+                  }
+                },
+                child: ItemCard(
+                  entry: item,
+                  deleteItem: deleteItem,
+                  updateItem: updateItem,
+                  markDone: markDone,
+                ),
+              ),
+            );
+          },
+        );
       },
     );
   }
