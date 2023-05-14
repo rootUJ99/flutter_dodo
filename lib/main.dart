@@ -113,11 +113,13 @@ class _DodoPage extends State<DodoPage> {
           return {...data, 'document': document.id};
         }).toList();
         return ListView.builder(
-          itemCount: list.length + 1,
+          itemCount: list.isEmpty ? 1 : list.length + 1,
           itemBuilder: (context, index) {
             // print(index);
             int calcIndex(int ind) => ind == 0 ? 0 : ind - 1;
-            final item = list[calcIndex(index)];
+            Map<String, dynamic>? item =
+                list.isEmpty ? null : list[calcIndex(index)];
+
             if (index == 0) {
               return Padding(
                 padding:
@@ -162,7 +164,7 @@ class _DodoPage extends State<DodoPage> {
                   switch (direction) {
                     case DismissDirection.endToStart:
                       print('delete item');
-                      deleteItem(item['document']);
+                      deleteItem(item!['document']);
                       break;
                     case DismissDirection.startToEnd:
                       print('edit item');
